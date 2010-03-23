@@ -6,7 +6,24 @@ Description: Export your WPSC sales log to Xero
 Version: 0.1
 Author: Allen Han
 Author URI: http://www.allenhan.com
+*/
 
+/*
+	This file is part of WPSC to Xero Exporter.
+
+    WPSC to Xero Exporter is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    WPSC to Xero Exporter is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with WPSC to Xero Exporter.  If not, see <http://www.gnu.org/licenses/>.
+	
 */
 
 //check to see whether the user is an admin or not.
@@ -51,13 +68,21 @@ if (is_admin()) {
 		$accountCode = $_GET['xero_code'];
 		$inclusive_tax = $_GET['tax'];
 		
+		$startdate = $_GET['start_date'];
+		$startdate = explode("/", $startdate);
+		$start_timestamp = mktime(0, 0, 0, $startdate[1], $startdate[0], $startdate[2]);
+		
+		$enddate = $_GET['end_date'];
+		$enddate = explode("/", $enddate);
+		$end_timestamp = mktime(0, 0, 0, $enddate[1], $enddate[0], $enddate[2]);
+		
 		$form_sql = "SELECT * FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `active` = '1';";
 		$form_data = $wpdb->get_results($form_sql,ARRAY_A);
 	
 		$data = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_PURCHASE_LOGS."` ORDER BY `date` ASC",ARRAY_A);
 		//exit('---><pre>'.print_r($data, true).'</pre>');  
-		//header('Content-Type: text/csv');
-		//header('Content-Disposition: inline; filename="Purchase Log '.date("M-d-Y", $start_timestamp).' to '.date("M-d-Y", $end_timestamp).'.csv"');	  
+		header('Content-Type: text/csv');
+		header('Content-Disposition: inline; filename="Purchase Log '.date("M-d-Y", $start_timestamp).' to '.date("M-d-Y", $end_timestamp).'.csv"');	  
 		$output .= "ContactName,EmailAddress,POAddressLine1,POAddressLine2,POAddressLine3,POAddressLine4,POCity,PORegion,POPostalCode,POCountry,InvoiceNumber,Reference,InvoiceDate,DueDate,SubTotal,TotalTax,Total,Description,Quantity,UnitAmount,AccountCode,TaxType,TaxAmount,TrackingName1,TrackingOption1,TrackingName2,TrackingOption2\n";
 		foreach((array)$data as $purchase) {
 		    $country_sql = "SELECT * FROM `".WPSC_TABLE_SUBMITED_FORM_DATA."` WHERE `log_id` = '".$purchase['id']."' AND `form_id` = '".get_option('country_form_field')."' LIMIT 1";
@@ -150,6 +175,7 @@ if (is_admin()) {
 		    }
 		}
 		echo $output;
+		//echo nl2br($output);
 		exit();
 	}
 }
